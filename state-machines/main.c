@@ -43,7 +43,8 @@ typedef enum {
 } state_t;
 
 int main(int argc, const char *argv[]) {
-	int counter = 0;
+	const int first_cycle = 1;
+	int cycle = first_cycle;
 
 	state_t state = LED_ON_2_CYCLES;
 	
@@ -51,9 +52,9 @@ int main(int argc, const char *argv[]) {
 		switch (state) {
 			case LED_ON_2_CYCLES:
 				led_on();
-				if (counter >= 1) {
+				if (cycle >= 2) {
 					state = LED_OFF_1_CYCLE; // Turn LED off next round.
-					counter = 0;
+					cycle = first_cycle;
 				}
 				break;
 				
@@ -65,14 +66,14 @@ int main(int argc, const char *argv[]) {
 			case LED_ON_1_CYCLES:
 				led_on();
 				state = LED_OFF_3_CYCLES;
-				counter = 0; // Reset counter. Next state will need this again.
+				cycle = first_cycle;
 				break;
 				
 			case LED_OFF_3_CYCLES:
 				led_off();
-				if (counter >= 2) {
+				if (cycle >= 3) {
 					state = LED_ON_2_CYCLES; // Restart cycle next round.
-					counter = 0;
+					cycle = first_cycle;
 				}
 				break;
 				
@@ -82,7 +83,7 @@ int main(int argc, const char *argv[]) {
 		}
 		
 		millisecond_sleep(200);
-		counter++;
+		cycle++;
 	}
 	
 	return EXIT_FAILURE; // Unreachable.
