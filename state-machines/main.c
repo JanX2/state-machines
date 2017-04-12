@@ -33,12 +33,13 @@ void led_off();
 
 // State pointer
 #if 0
-// The C syntax for function pointers is… hard to get used to and remember.
+// The C syntax for function pointers is…
+// hard to get used to and to remember.
 void (*state_fp)();
 #else
 // Same as above. Just a bit more readable and reusable.
-typedef void (*state_fp_t)(void);
-state_fp_t state_fp;
+typedef void (*action_t)(void);
+action_t state_fp;
 #endif
 
 void led_on() {
