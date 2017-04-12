@@ -27,36 +27,76 @@ void emit(const char *string) {
 	fflush(stdout); // Force the output to be displayed.
 }
 
-// States
-void led_on();
-void led_off();
+typedef enum {
+	STATE_LED_ON_2_CYCLES,
+	STATE_LED_OFF_1_CYCLE,
+	STATE_LED_ON_1_CYCLE,
+	STATE_LED_OFF_3_CYCLES,
+	STATE_COUNT // Needs to be the last entry.
+} state_t;
 
-// State pointer
-#if 0
-// The C syntax for function pointers is…
-// hard to get used to and to remember.
-void (*state_fp)();
-#else
-// Same as above. Just a bit more readable and reusable.
 typedef void (*action_t)(void);
-action_t state_fp;
-#endif
+
+typedef struct {
+	action_t action;
+	int cycle_count;
+	state_t next_state;
+} state_element_t;
+
+// Evil globals.
+// Could be encapsulated in a state machine state struct that is passed around.
+state_t _current_state;
+
+const int first_cycle = 1;
+int _cycle = first_cycle;
+
+
+// Actions
+void nil_action() {
+	exit(EXIT_FAILURE); // Should never be triggered.
+}
 
 void led_on() {
 	emit(" ☀︎ ");
-	state_fp = led_off;
 }
 
 void led_off() {
 	emit(" ◦ ");
-	state_fp = led_on;
 }
 
+
+state_element_t stateMatrix[STATE_COUNT] = {
+	/* STATE_LED_ON_2_CYCLES  */ {led_on,  2, STATE_LED_OFF_1_CYCLE, },
+	/* STATE_LED_OFF_1_CYCLE  */ {led_off, 1, STATE_LED_ON_1_CYCLE,  },
+	/* STATE_LED_ON_1_CYCLE   */ {led_on,  1, STATE_LED_OFF_3_CYCLES,},
+	/* STATE_LED_OFF_3_CYCLES */ {led_off, 3, STATE_LED_ON_2_CYCLES, },
+};
+
+void state_evaluation() {
+	// Determine the state matrix element for the current state.
+	state_element_t state_transition = stateMatrix[_current_state];
+	
+	if (_cycle >= state_transition.cycle_count) {
+		_cycle = first_cycle;
+		// Transition to the next state (set current state to the next state obtained from the matrix)…
+		_current_state = state_transition.next_state;
+	}
+	
+	if ((_cycle == first_cycle) &&
+		(state_transition.action != nil_action)) {
+		// … and trigger the appropriate action.
+		state_transition.action();
+	}
+	
+	_cycle += 1;
+}
+
+
 int main(int argc, const char *argv[]) {
-	state_fp = led_on;
+	_current_state = STATE_LED_ON_2_CYCLES;
 	
 	while (true) {
-		state_fp();
+		state_evaluation();
 		
 		millisecond_sleep(200);
 	}
