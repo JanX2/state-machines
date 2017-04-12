@@ -6,6 +6,7 @@
 //  Copyright © 2017 Jan. All rights reserved.
 //
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,10 @@ typedef enum {
 	STATE_LED_OFF_3_CYCLES,
 	STATE_COUNT // Needs to be the last entry.
 } state_t;
+
+bool is_valid_state(state_t state) {
+	return ((STATE_LED_ON_2_CYCLES <= state) && (state < STATE_COUNT));
+}
 
 typedef void (*action_t)(void);
 
@@ -73,6 +78,8 @@ state_element_t stateMatrix[STATE_COUNT] = {
 };
 
 void state_evaluation() {
+	assert(is_valid_state(_current_state));
+	
 	// Determine the state matrix element for the current state.
 	state_element_t state_transition = stateMatrix[_current_state];
 	
