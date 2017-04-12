@@ -27,63 +27,37 @@ void emit(const char *string) {
 	fflush(stdout); // Force the output to be displayed.
 }
 
+// States
+void led_on();
+void led_off();
+
+// State pointer
+#if 0
+// The C syntax for function pointers is… hard to get used to and remember.
+void (*state_fp)();
+#else
+// Same as above. Just a bit more readable and reusable.
+typedef void (*state_fp_t)(void);
+state_fp_t state_fp;
+#endif
+
 void led_on() {
 	emit(" ☀︎ ");
+	state_fp = led_off;
 }
 
 void led_off() {
 	emit(" ◦ ");
+	state_fp = led_on;
 }
 
-typedef enum {
-	LED_ON_2_CYCLES,
-	LED_OFF_1_CYCLE,
-	LED_ON_1_CYCLES,
-	LED_OFF_3_CYCLES,
-} state_t;
-
 int main(int argc, const char *argv[]) {
-	const int first_cycle = 1;
-	int cycle = first_cycle;
-
-	state_t state = LED_ON_2_CYCLES;
+	state_fp = led_on;
 	
 	while (true) {
-		switch (state) {
-			case LED_ON_2_CYCLES:
-				led_on();
-				if (cycle >= 2) {
-					state = LED_OFF_1_CYCLE; // Turn LED off next round.
-					cycle = first_cycle;
-				}
-				break;
-				
-			case LED_OFF_1_CYCLE:
-				led_off();
-				state = LED_ON_1_CYCLES; // LED back on next round.
-				break;
-				
-			case LED_ON_1_CYCLES:
-				led_on();
-				state = LED_OFF_3_CYCLES;
-				cycle = first_cycle;
-				break;
-				
-			case LED_OFF_3_CYCLES:
-				led_off();
-				if (cycle >= 3) {
-					state = LED_ON_2_CYCLES; // Restart cycle next round.
-					cycle = first_cycle;
-				}
-				break;
-				
-			default:
-				exit(EXIT_FAILURE);
-				break;
-		}
+		state_fp();
 		
 		millisecond_sleep(200);
-		cycle++;
 	}
 	
 	return EXIT_FAILURE; // Unreachable.
